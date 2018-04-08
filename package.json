@@ -1,6 +1,6 @@
 {
 	"name": "node-modules-viewer",
-	"displayName": "node-modules Viewer",
+	"displayName": "node_modules Dependency Viewer",
 	"description": "First attempt at an extension",
 	"Based of": "Samples for VSCode's view API",
 	"version": "0.0.1",
@@ -19,15 +19,12 @@
 	"icon": "media/dep.png",
 	"contributes": {
 		"views": {
-			"explorer": [
-				{
-					"id": "nodeDependencies",
-					"name": "Node Dependencies"
-				}
-			]
+			"explorer": [{
+				"id": "nodeDependencies",
+				"name": "Node Dependencies"
+			}]
 		},
-		"commands": [
-			{
+		"commands": [{
 				"command": "nodeDependencies.addEntry",
 				"title": "Add"
 			},
@@ -42,29 +39,50 @@
 			{
 				"command": "nodeDependencies.deleteEntry",
 				"title": "Delete"
+			},
+			{
+				"command": "extension.openPackageOnNpm",
+				"title": "Open on npmjs.org"
 			}
 		],
 		"menus": {
-			"commandPalette": [
-				{
+			"commandPalette": [{
 					"command": "nodeDependencies.refreshEntry",
-					"when": "view == nodeDependencies",
+					"when": "view == nodeDependencies && viewItem == dependency",
 					"group": "navigation"
 				},
 				{
 					"command": "nodeDependencies.addEntry",
-					"when": "view == nodeDependencies"
+					"title": "Add Node Dependency"
 				}
 			],
-			"view/item/context": [
-				{
+			"view/item/context": [{
 					"command": "nodeDependencies.deleteEntry",
 					"when": "view == nodeDependencies && viewItem == dependency"
+				},
+				{
+					"command": "nodeDependencies.addEntry",
+					"when": "view == nodeDependencies && viewItem == dependency",
+					"title": "Add Node Dependency"
+				},
+				{
+					"command": "extension.openPackageOnNpm",
+					"when": "view == nodeDependencies && viewItem == dependency",
+					"title": "Open on npmjs.org"
 				}
 			]
 		},
-		"configuration": [
-		]
+		"configuration": [{
+			"type": "object",
+			"title": "node_modules Dependency Viewer Configurations",
+			"properties": {
+				"node-modules-viewer.checkRoot": {
+					"type": "boolean",
+					"default": false,
+					"description": "Complete functions with their parameter signature."
+				}
+			}
+		}]
 	},
 	"scripts": {
 		"vscode:prepublish": "tsc -p ./",

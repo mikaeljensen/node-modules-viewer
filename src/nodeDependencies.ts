@@ -1,72 +1,127 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
+import { inspect } from 'util';
 
-export class DepNodeProvider implements vscode.TreeDataProvider<Dependency> {
+export class DepNodeProvider implements vscode.TreeDataProvider < DependencyTreeItem > {
 
-	private _onDidChangeTreeData: vscode.EventEmitter<Dependency | undefined> = new vscode.EventEmitter<Dependency | undefined>();
-	readonly onDidChangeTreeData: vscode.Event<Dependency | undefined> = this._onDidChangeTreeData.event;
+	private _onDidChangeTreeData: vscode.EventEmitter < DependencyTreeItem | undefined > = new vscode.EventEmitter < DependencyTreeItem | undefined > ();
+	readonly onDidChangeTreeData: vscode.Event < DependencyTreeItem | undefined > = this._onDidChangeTreeData.event;
 
-	constructor(private workspaceRoot: string) {
-	}
+
+
+	constructor(private workspaceRoot: string) {}
 
 	refresh(): void {
 		this._onDidChangeTreeData.fire();
 	}
 
-	getTreeItem(element: Dependency): vscode.TreeItem {
+	openLink(URL): void {
+		URL = vscode.Uri.parse(URL)
+		vscode.commands.executeCommand('vscode.open', URL);
+	}
+
+	openOnNPM(moduleName): void {
+		let URL = vscode.Uri.parse(`https://www.npmjs.com/package/${moduleName}`)
+		this.openLink(URL)
+	}
+
+	getTreeItem(element: DependencyTreeItem): vscode.TreeItem {
 		return element;
 	}
 
-	getChildren(element?: Dependency): Thenable<Dependency[]> {
+	getChildren(element ? : (DependencyTreeItem|PackageTreeFolder)): Thenable < DependencyTreeItem[] > {
 		if (!this.workspaceRoot) {
 			vscode.window.showInformationMessage('No dependency in empty workspace');
 			return Promise.resolve([]);
 		}
 
-		return new Promise(resolve => {
-			if (element) {
-				resolve(this.getDepsInPackageJson(path.join(this.workspaceRoot, 'node_modules', element.label, 'package.json')));
+		if (!element) {
+			const packageJsonPath = path.join(this.workspaceRoot, 'package.json');
+			if (this.pathExists(packageJsonPath)) {
+				return Promise.resolve(this.ParsePackageJson(packageJsonPath));
 			} else {
-				const packageJsonPath = path.join(this.workspaceRoot, 'package.json');
-				if (this.pathExists(packageJsonPath)) {
-					resolve(this.getDepsInPackageJson(packageJsonPath));
-				} else {
-					vscode.window.showInformationMessage('Workspace has no package.json');
-					resolve([]);
-				}
+				vscode.window.showInformationMessage('Workspace has no package.json');
+				return Promise.resolve([]);
 			}
-		});
+		}
+
+		if (element.type == 'folder') {
+			return new Promise(resolve => {
+				// TODO Not sure the right way to handle this error without setting input to type any
+				let return_array = []
+				let tmp_array = []
+				fs.readdirSync(element.folderPath).forEach(folderElement => {
+					let elementPath = path.join(element.folderPath, folderElement)
+					if (fs.statSync(elementPath).isDirectory()) {
+						return_array.push(new PackageTreeFolder(elementPath, folderElement))
+					} else {
+						tmp_array.push(new PackageTreeFile(vscode.Uri.file(elementPath)))
+					}
+				}) 
+				console.log(return_array.concat(tmp_array))
+				resolve(return_array.concat(tmp_array))
+			})
+		}
+
+		if (element.type == 'dependency') {		
+			return new Promise(resolve => {
+				// console.log("typeof element ", inspect(element))
+				let folderElement: (DependencyTreeItem|PackageTreeFolder|Dependency)[]
+				folderElement = [new PackageTreeFolder(path.join(this.workspaceRoot, 'node_modules', element.label), "Browse module folder")] 
+				resolve(folderElement.concat(this.ParsePackageJson(path.join(this.workspaceRoot, 'node_modules', element.label, 'package.json'))));
+			});
+		}
+
+		vscode.window.showInformationMessage('This should not happen, something wrong with ', inspect(element));
+		Promise.resolve([]);
+
 	}
+
 
 	/**
 	 * Given the path to package.json, read all its dependencies and devDependencies.
 	 */
-	private getDepsInPackageJson(packageJsonPath: string): Dependency[] {
+	private ParsePackageJson(packageJsonPath: string): DependencyTreeItem[] {
 		if (this.pathExists(packageJsonPath)) {
 			const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'));
 
 			const toDep = (moduleName: string, version: string): Dependency => {
-				if (this.pathExists(path.join(this.workspaceRoot, 'node_modules', moduleName))) {
+				const folderPath = path.join(this.workspaceRoot, 'node_modules', moduleName)
+				if (this.pathExists(folderPath)) {
 					return new Dependency(moduleName, version, vscode.TreeItemCollapsibleState.Collapsed);
 				} else {
-					return new Dependency(moduleName, version, vscode.TreeItemCollapsibleState.None, {
+					return new Dependency(moduleName, version, vscode.TreeItemCollapsibleState.None,  {
 						command: 'extension.openPackageOnNpm',
-						title: '',
+						title: 'Open on NPM',
 						arguments: [moduleName]
 					});
 				}
 			}
 
-			const deps = packageJson.dependencies
-				? Object.keys(packageJson.dependencies).map(dep => toDep(dep, packageJson.dependencies[dep]))
-				: [];
-			const devDeps = packageJson.devDependencies
-				? Object.keys(packageJson.devDependencies).map(dep => toDep(dep, packageJson.devDependencies[dep]))
-				: [];
-			return deps.concat(devDeps);
+			// const folder path.join(this.workspaceRoot, 'node_modules', element.label
+
+
+			const dep = packageJson.dependencies ?
+				Object.keys(packageJson.dependencies).map(dep => toDep(dep, packageJson.dependencies[dep])) :
+				[new Seperator('--- No Dependencies ---')];
+			const devdep = packageJson.devDependencies ?
+				[new Seperator('--- Dev Dependencies ---')].concat(Object.keys(packageJson.devDependencies).map(dep => toDep(dep, packageJson.devDependencies[dep]))) :
+				[new Seperator('--- No Dev Dependencies ---')];
+			return [].concat(dep).concat(devdep);
 		} else {
 			return [];
+		}
+	}
+
+	private returnFolderContent(path: string) {
+		if (this.pathExists(path)) {
+			const files = fs.readdirSync(path).map(file => {
+				// new PackageTreeElem()
+			})
+
+		} else {
+			return []
 		}
 	}
 
@@ -81,26 +136,102 @@ export class DepNodeProvider implements vscode.TreeDataProvider<Dependency> {
 	}
 }
 
-class Dependency extends vscode.TreeItem {
+
+class DependencyTreeItem extends vscode.TreeItem {
+
+	public type = "unassigned"
 
 	constructor(
-		public readonly label: string,
-		private version: string,
+		public readonly label: any, //TODO better handling of type, to support both string for label and Uri for file (string|vscode.Uri) doesn't work
 		public readonly collapsibleState: vscode.TreeItemCollapsibleState,
-		public readonly command?: vscode.Command
+	) 
+	{
+		super(label, collapsibleState);
+	}	
+
+	get tooltip(): string {
+		return `This Super should not be shown`
+	}
+
+	get contextValue(): string {
+		return this.type
+	}
+
+	set contextValue(value: string) {
+		this.type = value
+	}
+
+}
+
+class PackageTreeFolder extends DependencyTreeItem {
+
+	public readonly type = "folder"
+
+	constructor(
+		public readonly folderPath: string,
+		public readonly label: string,
+	) {
+		super(label, vscode.TreeItemCollapsibleState.Collapsed);
+	}
+
+	get tooltip(): string {
+		return `${this.folderPath}`
+	}
+
+	iconPath = {
+		light: path.join(__filename, '..', '..', '..', 'resources', 'light', 'folder.svg'),
+		dark: path.join(__filename, '..', '..', '..', 'resources', 'dark', 'folder.svg')
+	};
+
+}
+
+class PackageTreeFile extends vscode.TreeItem {
+
+	public readonly type = "file"
+	
+	constructor(
+		public readonly resourceUri: vscode.Uri,
+	) {
+		super(resourceUri);
+		// this.type = "file"
+	}
+}
+class Dependency extends DependencyTreeItem {
+
+	public readonly type = "dependency"
+	
+	constructor(
+		public readonly label: string,
+		public readonly version: string,
+		public readonly collapsibleState: vscode.TreeItemCollapsibleState,
+		public readonly command ? : vscode.Command
 	) {
 		super(label, collapsibleState);
 	}
 
+	// contextValue = this.type;
 	get tooltip(): string {
-		return `${this.label}-${this.version}`
+		return `${this.label}-${this.version}\n${this.contextValue}`
 	}
+
 
 	iconPath = {
 		light: path.join(__filename, '..', '..', '..', 'resources', 'light', 'dependency.svg'),
 		dark: path.join(__filename, '..', '..', '..', 'resources', 'dark', 'dependency.svg')
 	};
+}
+class Seperator extends DependencyTreeItem {
 
-	contextValue = 'dependency';
+	constructor(
+		public readonly label: string
+	) {
+		super(label, vscode.TreeItemCollapsibleState.None);
+		this.type = "seperator"
+	}
+	
+
+	get tooltip(): string {
+		return `It is just a seperator, nothing to see here`
+	}
 
 }
