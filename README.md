@@ -13,19 +13,19 @@ No more endless scrolling through the node_modules folder to find the package yo
   - All media resources kindly borrowed from source project (files follow the icon theme of the workspace)
 
 ## Planned updates
-
 - Configuration options to modify behaviour
 - Parse more information from the package.json of the modules
 - More fun stuff to do in the context menu
 - Implement normal file contex menu if possible (when I figure out how)
 - Anyone and everyone are welcome to give suggestions or contribute to the development
 
-- Maybe
-  - Directly install new dependencies
-  - Remove dependencies
-  - Get the reload thingy to work (not sure it is needed)
+And maybe
+- Directly install new dependencies
+- Remove dependencies
+- Get the reload thingy to work (not sure it is needed)
 
 ## Special thanks
+
 To Microsoft for an awesome IDE and the very useful code examples
 
 ref: https://github.com/Microsoft/vscode-extension-samples/tree/master/tree-view-sample
