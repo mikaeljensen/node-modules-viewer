@@ -7,10 +7,10 @@ No more endless scrolling through the node_modules folder to find the package yo
 - Rightclick a dependency to open on npmjs.org
 - Fast and effecient overview of direct project dependencies and subdependencies
 - Based of the vscode-extension-samples/tree-view-sample
-- - Slimmed down to just include the needed (just the Node dependencies view)
-- - Rename the package to prevent possible namespace collision 
-- - Added some TreeItem classes to accomodate for files, folders and seperators 
-- - All media resources kindly borrowed from source project (files follow the icon theme of the workspace)
+  - Slimmed down to just include the needed (just the Node dependencies view)
+  - Rename the package to prevent possible namespace collision 
+  - Added some TreeItem classes to accomodate for files, folders and seperators 
+  - All media resources kindly borrowed from source project (files follow the icon theme of the workspace)
 
 ## Planned updates
 
@@ -21,9 +21,9 @@ No more endless scrolling through the node_modules folder to find the package yo
 - Anyone and everyone are welcome to give suggestions or contribute to the development
 
 - Maybe
-- - Directly install new dependencies
-- - Remove dependencies
-- - Get the reload thingy to work (not sure it is needed)
+  - Directly install new dependencies
+  - Remove dependencies
+  - Get the reload thingy to work (not sure it is needed)
 
 ## Special thanks
 To Microsoft for an awesome IDE and the very useful code examples
