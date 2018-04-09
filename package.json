@@ -1,15 +1,14 @@
 {
 	"name": "node-modules-viewer",
-	"displayName": "node_modules Dependency Viewer",
-	"description": "First attempt at an extension",
+	"displayName": "Dependency Viewer for node_modules ",
+	"description": "Simple, effecient dependency browser (suggestions are welcome)",
 	"Based of": "Samples for VSCode's view API",
 	"version": "0.0.1",
-	"publisher": "Mikael Jensen",
+	"publisher": "seeker-dk",
 	"license": "MIT",
 	"engines": {
 		"vscode": "^1.21.0"
 	},
-	"enableProposedApi": true,
 	"categories": [
 		"Extension Packs",
 		"Other"
@@ -18,7 +17,11 @@
 		"onView:node-modules-viewer"
 	],
 	"main": "./out/src/extension",
-	"icon": "media/dep.png",
+	"icon": "media/NewLogo_resize.png",
+	"repository": {
+    "type": "git",
+    "url": "git+https://github.com/mikaeljensen/node-modules-viewer.git"
+  },
 	"contributes": {
 		"views": {
 			"explorer": [

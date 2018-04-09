@@ -32,7 +32,10 @@ ref: https://github.com/Microsoft/vscode-extension-samples/tree/master/tree-view
 
 ## Running the example from source
 
+Get it from: https://github.com/mikaeljensen/node-modules-viewer.git
+
 - Open this example in VS Code Insiders
 - `npm install`
 - `npm run compile`
 - `F5` to start debugging
+
