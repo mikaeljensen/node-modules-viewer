@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
-import { inspect } from 'util';
+import {inspect} from 'util'; 
 
 export class DepNodeProvider implements vscode.TreeDataProvider < DependencyTreeItem > {
 
@@ -26,11 +26,24 @@ export class DepNodeProvider implements vscode.TreeDataProvider < DependencyTree
 		this.openLink(URL)
 	}
 
+	openFileInEditor(Uri: vscode.Uri) {
+		try {
+			vscode.workspace.openTextDocument(Uri).then(doc => {
+				console.log("opened")
+				vscode.window.showTextDocument(doc, ).then(editor => {
+					console.log("show")
+				})
+			})
+		} catch (e) {
+			console.error("error", e)
+		}
+	}
+
 	getTreeItem(element: DependencyTreeItem): vscode.TreeItem {
 		return element;
 	}
 
-	getChildren(element ? : (DependencyTreeItem|PackageTreeFolder)): Thenable < DependencyTreeItem[] > {
+	getChildren(element ? : any): Thenable < DependencyTreeItem[] > {
 		if (!this.workspaceRoot) {
 			vscode.window.showInformationMessage('No dependency in empty workspace');
 			return Promise.resolve([]);
@@ -58,17 +71,15 @@ export class DepNodeProvider implements vscode.TreeDataProvider < DependencyTree
 					} else {
 						tmp_array.push(new PackageTreeFile(vscode.Uri.file(elementPath)))
 					}
-				}) 
-				console.log(return_array.concat(tmp_array))
+				})
 				resolve(return_array.concat(tmp_array))
 			})
 		}
 
-		if (element.type == 'dependency') {		
+		if (element.type == 'dependency') {
 			return new Promise(resolve => {
-				// console.log("typeof element ", inspect(element))
-				let folderElement: (DependencyTreeItem|PackageTreeFolder|Dependency)[]
-				folderElement = [new PackageTreeFolder(path.join(this.workspaceRoot, 'node_modules', element.label), "Browse module folder")] 
+				let folderElement: (DependencyTreeItem | PackageTreeFolder | Dependency)[]
+				folderElement = [new PackageTreeFolder(path.join(this.workspaceRoot, 'node_modules', element.label), "Browse module folder")]
 				resolve(folderElement.concat(this.ParsePackageJson(path.join(this.workspaceRoot, 'node_modules', element.label, 'package.json'))));
 			});
 		}
@@ -91,39 +102,19 @@ export class DepNodeProvider implements vscode.TreeDataProvider < DependencyTree
 				if (this.pathExists(folderPath)) {
 					return new Dependency(moduleName, version, vscode.TreeItemCollapsibleState.Collapsed);
 				} else {
-					return new Dependency(moduleName, version, vscode.TreeItemCollapsibleState.None,  {
-						command: 'extension.openPackageOnNpm',
-						title: 'Open on NPM',
-						arguments: [moduleName]
-					});
+					return new Dependency(moduleName, version, vscode.TreeItemCollapsibleState.None);
 				}
 			}
 
-			// const folder path.join(this.workspaceRoot, 'node_modules', element.label
-
-
 			const dep = packageJson.dependencies ?
-				Object.keys(packageJson.dependencies).map(dep => toDep(dep, packageJson.dependencies[dep])) :
-				[new Seperator('--- No Dependencies ---')];
-			const devdep = packageJson.devDependencies ?
-				[new Seperator('--- Dev Dependencies ---')].concat(Object.keys(packageJson.devDependencies).map(dep => toDep(dep, packageJson.devDependencies[dep]))) :
-				[new Seperator('--- No Dev Dependencies ---')];
+				Object.keys(packageJson.dependencies).map(dep => toDep(dep, packageJson.dependencies[dep])) : [new Seperator('--- No Dependencies ---')];
+			const devdep = packageJson.devDependencies ? [new Seperator('--- Dev Dependencies ---')].concat(Object.keys(packageJson.devDependencies).map(dep => toDep(dep, packageJson.devDependencies[dep]))) : [new Seperator('--- No Dev Dependencies ---')];
 			return [].concat(dep).concat(devdep);
 		} else {
 			return [];
 		}
 	}
 
-	private returnFolderContent(path: string) {
-		if (this.pathExists(path)) {
-			const files = fs.readdirSync(path).map(file => {
-				// new PackageTreeElem()
-			})
-
-		} else {
-			return []
-		}
-	}
 
 	private pathExists(p: string): boolean {
 		try {
@@ -142,12 +133,11 @@ class DependencyTreeItem extends vscode.TreeItem {
 	public type = "unassigned"
 
 	constructor(
-		public readonly label: any, //TODO better handling of type, to support both string for label and Uri for file (string|vscode.Uri) doesn't work
+		public readonly label: string, 
 		public readonly collapsibleState: vscode.TreeItemCollapsibleState,
-	) 
-	{
+	) {
 		super(label, collapsibleState);
-	}	
+	}
 
 	get tooltip(): string {
 		return `This Super should not be shown`
@@ -188,18 +178,23 @@ class PackageTreeFolder extends DependencyTreeItem {
 class PackageTreeFile extends vscode.TreeItem {
 
 	public readonly type = "file"
-	
+	public readonly command ? : vscode.Command
+
 	constructor(
 		public readonly resourceUri: vscode.Uri,
 	) {
 		super(resourceUri);
-		// this.type = "file"
+		this.command = {
+			command: 'node-modules-viewer.openFileInEditor',
+			title: 'Open File in Editor',
+			arguments: [resourceUri]
+		}
 	}
 }
 class Dependency extends DependencyTreeItem {
 
 	public readonly type = "dependency"
-	
+
 	constructor(
 		public readonly label: string,
 		public readonly version: string,
@@ -209,9 +204,8 @@ class Dependency extends DependencyTreeItem {
 		super(label, collapsibleState);
 	}
 
-	// contextValue = this.type;
 	get tooltip(): string {
-		return `${this.label}-${this.version}\n${this.contextValue}`
+		return `${this.label}-${this.version}`
 	}
 
 
@@ -228,7 +222,7 @@ class Seperator extends DependencyTreeItem {
 		super(label, vscode.TreeItemCollapsibleState.None);
 		this.type = "seperator"
 	}
-	
+
 
 	get tooltip(): string {
 		return `It is just a seperator, nothing to see here`

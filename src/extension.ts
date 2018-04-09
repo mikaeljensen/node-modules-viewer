@@ -2,7 +2,7 @@
 
 import * as vscode from 'vscode';
 
-import { DepNodeProvider } from './nodeDependencies'
+import { DepNodeProvider } from './node-modules-viewer'
 
 import {inspect} from 'util'
 
@@ -12,11 +12,9 @@ export function activate(context: vscode.ExtensionContext) {
 
 	const nodeDependenciesProvider = new DepNodeProvider(rootPath);
 
-	vscode.window.registerTreeDataProvider('nodeDependencies', nodeDependenciesProvider);
-	vscode.commands.registerCommand('nodeDependencies.refreshEntry', () => nodeDependenciesProvider.refresh());
-	vscode.commands.registerCommand('nodeDependencies.addEntry', node => vscode.window.showInformationMessage('Successfully called add entry'));
-	vscode.commands.registerCommand('nodeDependencies.deleteEntry', node => vscode.window.showInformationMessage('Successfully called delete entry'));
-	// vscode.commands.registerCommand('extension.openPackageOnNpm', moduleName => vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(`https://www.npmjs.com/package/${moduleName}`)));
-	vscode.commands.registerCommand('extension.openPackageOnNpm', moduleName => nodeDependenciesProvider.openOnNPM(moduleName.label || moduleName));
+	vscode.window.registerTreeDataProvider('node-modules-viewer', nodeDependenciesProvider);
+	vscode.commands.registerCommand('node-modules-viewer.refreshEntry', () => nodeDependenciesProvider.refresh());
+	vscode.commands.registerCommand('node-modules-viewer.openPackageOnNpm', moduleName => nodeDependenciesProvider.openOnNPM(moduleName.label || moduleName));
+	vscode.commands.registerCommand('node-modules-viewer.openFileInEditor', Uri => nodeDependenciesProvider.openFileInEditor(Uri));
 
 }

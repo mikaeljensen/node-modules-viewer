@@ -5,31 +5,36 @@
 	"Based of": "Samples for VSCode's view API",
 	"version": "0.0.1",
 	"publisher": "Mikael Jensen",
+	"license": "MIT",
 	"engines": {
-		"vscode": "^1.20.0"
+		"vscode": "^1.21.0"
 	},
 	"enableProposedApi": true,
 	"categories": [
-		"Extension Packs"
+		"Extension Packs",
+		"Other"
 	],
 	"activationEvents": [
-		"onView:nodeDependencies"
+		"onView:node-modules-viewer"
 	],
 	"main": "./out/src/extension",
 	"icon": "media/dep.png",
 	"contributes": {
 		"views": {
-			"explorer": [{
-				"id": "nodeDependencies",
-				"name": "Node Dependencies"
-			}]
+			"explorer": [
+				{
+					"id": "node-modules-viewer",
+					"name": "Node Dependencies"
+				}
+			]
 		},
-		"commands": [{
-				"command": "nodeDependencies.addEntry",
+		"commands": [
+			{
+				"command": "node-modules-viewer.addEntry",
 				"title": "Add"
 			},
 			{
-				"command": "nodeDependencies.refreshEntry",
+				"command": "node-modules-viewer.refreshEntry",
 				"title": "Refresh",
 				"icon": {
 					"light": "resources/light/refresh.svg",
@@ -37,52 +42,42 @@
 				}
 			},
 			{
-				"command": "nodeDependencies.deleteEntry",
+				"command": "node-modules-viewer.deleteEntry",
 				"title": "Delete"
 			},
 			{
-				"command": "extension.openPackageOnNpm",
+				"command": "node-modules-viewer.openPackageOnNpm",
 				"title": "Open on npmjs.org"
 			}
 		],
 		"menus": {
-			"commandPalette": [{
-					"command": "nodeDependencies.refreshEntry",
-					"when": "view == nodeDependencies && viewItem == dependency",
-					"group": "navigation"
+			"commandPalette": [],
+			"view/item/context": [
+				{
+					"command": "node-modules-viewer.openFileInEditor",
+					"when": "view == node-modules-viewer && viewItem == file",
+					"title": "Open in Editor"
 				},
 				{
-					"command": "nodeDependencies.addEntry",
-					"title": "Add Node Dependency"
-				}
-			],
-			"view/item/context": [{
-					"command": "nodeDependencies.deleteEntry",
-					"when": "view == nodeDependencies && viewItem == dependency"
-				},
-				{
-					"command": "nodeDependencies.addEntry",
-					"when": "view == nodeDependencies && viewItem == dependency",
-					"title": "Add Node Dependency"
-				},
-				{
-					"command": "extension.openPackageOnNpm",
-					"when": "view == nodeDependencies && viewItem == dependency",
+					"command": "node-modules-viewer.openPackageOnNpm",
+					"when": "view == node-modules-viewer && viewItem == dependency",
 					"title": "Open on npmjs.org"
 				}
 			]
 		},
-		"configuration": [{
-			"type": "object",
-			"title": "node_modules Dependency Viewer Configurations",
-			"properties": {
-				"node-modules-viewer.checkRoot": {
-					"type": "boolean",
-					"default": false,
-					"description": "Complete functions with their parameter signature."
+		"configuration": [
+			{
+				"type": "object",
+				"title": "node_modules Dependency Viewer Configurations",
+				"properties": {
+					"node-modules-viewer.checkRoot": {
+						"type": "boolean",
+						"default": false,
+						"description": "Complete functions with their parameter signature."
+					}
 				}
 			}
-		}]
+		]
 	},
 	"scripts": {
 		"vscode:prepublish": "tsc -p ./",
