@@ -50,7 +50,7 @@
             },
             {
                 "command": "node-modules-viewer.openPackageOnNpm",
-                "title": "Open on npmjs.org"
+                "title": "Open on registry webpage (i.e. npmjs.com)"
             }
         ],
         "menus": {
