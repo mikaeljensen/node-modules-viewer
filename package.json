@@ -33,10 +33,6 @@
         },
         "commands": [
             {
-                "command": "node-modules-viewer.addEntry",
-                "title": "Add"
-            },
-            {
                 "command": "node-modules-viewer.refreshEntry",
                 "title": "Refresh",
                 "icon": {
@@ -45,8 +41,8 @@
                 }
             },
             {
-                "command": "node-modules-viewer.deleteEntry",
-                "title": "Delete"
+                "command": "node-modules-viewer.openFileInEditor",
+                "title": "Open in Editor"
             },
             {
                 "command": "node-modules-viewer.openPackageOnNpm",
@@ -55,6 +51,13 @@
         ],
         "menus": {
             "commandPalette": [],
+            "view/title": [
+                {
+                    "command": "node-modules-viewer.refreshEntry",
+                    "when": "view == node-modules-viewer",
+                    "group": "navigation"
+                }
+            ],
             "view/item/context": [
                 {
                     "command": "node-modules-viewer.openFileInEditor",
@@ -64,7 +67,7 @@
                 {
                     "command": "node-modules-viewer.openPackageOnNpm",
                     "when": "view == node-modules-viewer && viewItem == dependency",
-                    "title": "Open on npmjs.org"
+                    "title": "Open on registry webpage (i.e. npmjs.com)"
                 }
             ]
         },
