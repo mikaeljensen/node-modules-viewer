@@ -3,12 +3,22 @@
   "displayName": "Dependency Viewer for node_modules ",
   "description": "Simple, effecient dependency browser (suggestions are welcome)",
   "Based of": "Samples for VSCode's view API",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "publisher": "seeker-dk",
   "license": "MIT",
   "engines": {
     "vscode": "^1.21.0"
   },
+  "contributors": [
+    {
+      "name": "Mikael Jensen",
+      "url": "https://github.com/forivall"
+    },
+    {
+      "name": "Emily Marigold Klassen",
+      "url": "https://github.com/forivall"
+    }
+  ],
   "categories": [
     "Extension Packs",
     "Other"
@@ -92,10 +102,10 @@
   },
   "devDependencies": {
     "@npm/types": "github:forivall/npm-types#forivall/fix-typo",
-    "@types/fs-extra": "^8.0.0",
-    "@types/node": "*",
-    "typescript": "^2.1.4",
-    "vscode": "^1.0.0"
+    "@types/fs-extra": "^8.1.0",
+    "@types/node": "^14.0.1",
+    "typescript": "^2.9.2",
+    "vscode": "^1.1.37"
   },
   "dependencies": {
     "@lerna/npm-conf": "^3.16.0",
