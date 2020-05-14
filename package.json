@@ -9,6 +9,16 @@
   "engines": {
     "vscode": "^1.21.0"
   },
+  "contributors": [
+    {
+      "name": "Mikael Jensen",
+      "url": "https://github.com/forivall"
+    },
+    {
+      "name": "Emily Marigold Klassen",
+      "url": "https://github.com/forivall"
+    }
+  ],
   "categories": [
     "Extension Packs",
     "Other"

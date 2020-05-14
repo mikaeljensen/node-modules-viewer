@@ -7,16 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.0.5] - 2020-05-15
 
-Finally republished
+Republished
 
 ### Added
 
 - Changelog
-- Credit
+- Contributors & Credit
 
 ### Changed
 
-- Updated packages
+- Updated npm packages & package-lock
 
 ## [0.0.4] - 2019-08-13
 
@@ -31,7 +31,7 @@ HUGE thanks
 
 ### Changed
 
-- Fixed node-modules-viewer.openFileInEditor not defined
+- Fixed "node-modules-viewer.openFileInEditor not defined"
 
 ## [0.0.3] - 2018-04-13
 
