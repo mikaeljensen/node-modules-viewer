@@ -1,105 +1,105 @@
 {
-    "name": "node-modules-viewer",
-    "displayName": "Dependency Viewer for node_modules ",
-    "description": "Simple, effecient dependency browser (suggestions are welcome)",
-    "Based of": "Samples for VSCode's view API",
-    "version": "0.0.3",
-    "publisher": "seeker-dk",
-    "license": "MIT",
-    "engines": {
-        "vscode": "^1.21.0"
+  "name": "node-modules-viewer",
+  "displayName": "Dependency Viewer for node_modules ",
+  "description": "Simple, effecient dependency browser (suggestions are welcome)",
+  "Based of": "Samples for VSCode's view API",
+  "version": "0.0.4",
+  "publisher": "seeker-dk",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.21.0"
+  },
+  "categories": [
+    "Extension Packs",
+    "Other"
+  ],
+  "activationEvents": [
+    "onView:node-modules-viewer"
+  ],
+  "main": "./out/src/extension",
+  "icon": "media/NewLogo_resize.png",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mikaeljensen/node-modules-viewer.git"
+  },
+  "contributes": {
+    "views": {
+      "explorer": [
+        {
+          "id": "node-modules-viewer",
+          "name": "Node Dependencies"
+        }
+      ]
     },
-    "categories": [
-        "Extension Packs",
-        "Other"
+    "commands": [
+      {
+        "command": "node-modules-viewer.refreshEntry",
+        "title": "Refresh",
+        "icon": {
+          "light": "resources/light/refresh.svg",
+          "dark": "resources/dark/refresh.svg"
+        }
+      },
+      {
+        "command": "node-modules-viewer.openFileInEditor",
+        "title": "Open in Editor"
+      },
+      {
+        "command": "node-modules-viewer.openPackageOnNpm",
+        "title": "Open on registry webpage (i.e. npmjs.com)"
+      }
     ],
-    "activationEvents": [
-        "onView:node-modules-viewer"
-    ],
-    "main": "./out/src/extension",
-    "icon": "media/NewLogo_resize.png",
-    "repository": {
-        "type": "git",
-        "url": "git+https://github.com/mikaeljensen/node-modules-viewer.git"
-    },
-    "contributes": {
-        "views": {
-            "explorer": [
-                {
-                    "id": "node-modules-viewer",
-                    "name": "Node Dependencies"
-                }
-            ]
+    "menus": {
+      "commandPalette": [],
+      "view/title": [
+        {
+          "command": "node-modules-viewer.refreshEntry",
+          "when": "view == node-modules-viewer",
+          "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "node-modules-viewer.openFileInEditor",
+          "when": "view == node-modules-viewer && viewItem == file",
+          "title": "Open in Editor"
         },
-        "commands": [
-            {
-                "command": "node-modules-viewer.refreshEntry",
-                "title": "Refresh",
-                "icon": {
-                    "light": "resources/light/refresh.svg",
-                    "dark": "resources/dark/refresh.svg"
-                }
-            },
-            {
-                "command": "node-modules-viewer.openFileInEditor",
-                "title": "Open in Editor"
-            },
-            {
-                "command": "node-modules-viewer.openPackageOnNpm",
-                "title": "Open on registry webpage (i.e. npmjs.com)"
-            }
-        ],
-        "menus": {
-            "commandPalette": [],
-            "view/title": [
-                {
-                    "command": "node-modules-viewer.refreshEntry",
-                    "when": "view == node-modules-viewer",
-                    "group": "navigation"
-                }
-            ],
-            "view/item/context": [
-                {
-                    "command": "node-modules-viewer.openFileInEditor",
-                    "when": "view == node-modules-viewer && viewItem == file",
-                    "title": "Open in Editor"
-                },
-                {
-                    "command": "node-modules-viewer.openPackageOnNpm",
-                    "when": "view == node-modules-viewer && viewItem == dependency",
-                    "title": "Open on registry webpage (i.e. npmjs.com)"
-                }
-            ]
-        },
-        "configuration": [
-            {
-                "type": "object",
-                "title": "node_modules Dependency Viewer Configurations",
-                "properties": {
-                    "node-modules-viewer.checkRoot": {
-                        "type": "boolean",
-                        "default": false,
-                        "description": "Complete functions with their parameter signature."
-                    }
-                }
-            }
-        ]
+        {
+          "command": "node-modules-viewer.openPackageOnNpm",
+          "when": "view == node-modules-viewer && viewItem == dependency",
+          "title": "Open on registry webpage (i.e. npmjs.com)"
+        }
+      ]
     },
-    "scripts": {
-        "vscode:prepublish": "tsc -p ./",
-        "compile": "tsc -watch -p ./",
-        "postinstall": "node ./node_modules/vscode/bin/install"
-    },
-    "devDependencies": {
-        "@npm/types": "github:forivall/npm-types#forivall/fix-typo",
-        "@types/fs-extra": "^8.0.0",
-        "@types/node": "*",
-        "typescript": "^2.1.4",
-        "vscode": "^1.0.0"
-    },
-    "dependencies": {
-        "@lerna/npm-conf": "^3.16.0",
-        "find-up": "^4.1.0",
-        "fs-extra": "^8.1.0"
-    }
+    "configuration": [
+      {
+        "type": "object",
+        "title": "node_modules Dependency Viewer Configurations",
+        "properties": {
+          "node-modules-viewer.checkRoot": {
+            "type": "boolean",
+            "default": false,
+            "description": "Complete functions with their parameter signature."
+          }
+        }
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "tsc -p ./",
+    "compile": "tsc -watch -p ./",
+    "postinstall": "node ./node_modules/vscode/bin/install"
+  },
+  "devDependencies": {
+    "@npm/types": "github:forivall/npm-types#forivall/fix-typo",
+    "@types/fs-extra": "^8.0.0",
+    "@types/node": "*",
+    "typescript": "^2.1.4",
+    "vscode": "^1.0.0"
+  },
+  "dependencies": {
+    "@lerna/npm-conf": "^3.16.0",
+    "find-up": "^4.1.0",
+    "fs-extra": "^8.1.0"
+  }
 }
