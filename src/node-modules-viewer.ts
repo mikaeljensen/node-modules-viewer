@@ -1,29 +1,41 @@
 import * as vscode from 'vscode';
-import * as fs from 'fs';
+import * as fs from 'fs-extra';
 import * as path from 'path';
-import {inspect} from 'util'; 
+import {inspect} from 'util';
+import * as findUp from 'find-up';
+import {PackageJson} from '@npm/types'
 
-export class DepNodeProvider implements vscode.TreeDataProvider < DependencyTreeItem > {
+export class DepNodeProvider implements vscode.TreeDataProvider < vscode.TreeItem > {
 
 	private _onDidChangeTreeData: vscode.EventEmitter < DependencyTreeItem | undefined > = new vscode.EventEmitter < DependencyTreeItem | undefined > ();
 	readonly onDidChangeTreeData: vscode.Event < DependencyTreeItem | undefined > = this._onDidChangeTreeData.event;
 
-
+	// private _npmConf?: typeof import('@lerna/npm-conf');
+	private _npmConf?: any;
 
 	constructor(private workspaceRoot: string) {}
+
+	get npmConf() {
+		if (!this._npmConf) {
+			const npmConf = require('@lerna/npm-conf');
+			this._npmConf = npmConf();
+		}
+		return this._npmConf;
+	}
 
 	refresh(): void {
 		this._onDidChangeTreeData.fire();
 	}
 
-	openLink(URL): void {
-		URL = vscode.Uri.parse(URL)
-		vscode.commands.executeCommand('vscode.open', URL);
+	openLink(u: string): void {
+		const uri = vscode.Uri.parse(u)
+		vscode.commands.executeCommand('vscode.open', uri);
 	}
 
-	openOnNPM(moduleName): void {
-		let URL = vscode.Uri.parse(`https://www.npmjs.com/package/${moduleName}`)
-		this.openLink(URL)
+	openOnNPM(moduleName: string): void {
+		const scope = moduleName.split('/', 1)[0];
+		const registryHtmlPrefix = this.npmConf.get((scope ? `${scope}:` : '') + 'registry-html-prefix') || 'https://www.npmjs.com/package/';
+		this.openLink(`${registryHtmlPrefix}${moduleName}`);
 	}
 
 	openFileInEditor(Uri: vscode.Uri) {
@@ -43,7 +55,7 @@ export class DepNodeProvider implements vscode.TreeDataProvider < DependencyTree
 		return element;
 	}
 
-	getChildren(element ? : any): Thenable < DependencyTreeItem[] > {
+	getChildren(element?: PackageTreeFolder | Dependency): Thenable < vscode.TreeItem[] > {
 		if (!this.workspaceRoot) {
 			vscode.window.showInformationMessage('No dependency in empty workspace');
 			return Promise.resolve([]);
@@ -52,7 +64,7 @@ export class DepNodeProvider implements vscode.TreeDataProvider < DependencyTree
 		if (!element) {
 			const packageJsonPath = path.join(this.workspaceRoot, 'package.json');
 			if (this.pathExists(packageJsonPath)) {
-				return Promise.resolve(this.ParsePackageJson(packageJsonPath));
+				return this.ParsePackageJson(packageJsonPath).then(({items}) => items);
 			} else {
 				vscode.window.showInformationMessage('Workspace has no package.json');
 				return Promise.resolve([]);
@@ -60,59 +72,73 @@ export class DepNodeProvider implements vscode.TreeDataProvider < DependencyTree
 		}
 
 		if (element.type == 'folder') {
-			return new Promise(resolve => {
-				// TODO Not sure the right way to handle this error without setting input to type any
-				let return_array = []
-				let tmp_array = []
-				fs.readdirSync(element.folderPath).forEach(folderElement => {
-					let elementPath = path.join(element.folderPath, folderElement)
-					if (fs.statSync(elementPath).isDirectory()) {
-						return_array.push(new PackageTreeFolder(elementPath, folderElement))
-					} else {
-						tmp_array.push(new PackageTreeFile(vscode.Uri.file(elementPath)))
+			return fs.readdir(element.folderPath)
+			.then((elements) => Promise.all(elements.map((folderElement) => {
+				let elementPath = path.join(element.folderPath, folderElement)
+				return fs.stat(elementPath).then((stats) =>
+					stats.isDirectory()
+						? new PackageTreeFolder(elementPath, folderElement)
+						: new PackageTreeFile(vscode.Uri.file(elementPath), folderElement)
+				)
+			})))
+			.then((elements) =>
+				elements.sort((a, b) => {
+					if (a.type === b.type) {
+						return a.label.localeCompare(b.label)
 					}
+					return a.type === 'folder' ? -1 : 1
 				})
-				resolve(return_array.concat(tmp_array))
-			})
+			)
 		}
 
 		if (element.type == 'dependency') {
-			return new Promise(resolve => {
-				let folderElement: (DependencyTreeItem | PackageTreeFolder | Dependency)[]
-				folderElement = [new PackageTreeFolder(path.join(this.workspaceRoot, 'node_modules', element.label), "Browse module folder")]
-				resolve(folderElement.concat(this.ParsePackageJson(path.join(this.workspaceRoot, 'node_modules', element.label, 'package.json'))));
-			});
+			const folderPath = element.folderPath || path.join(this.workspaceRoot, 'node_modules', element.label)
+			return this.ParsePackageJson(path.join(folderPath, 'package.json'), element.parents)
+			.then(({pkg, items}) => [
+				new PackageTreeFolder(
+					folderPath,
+					`Browse folder @ ${pkg.version}`,
+					this.workspaceRoot
+				),
+				...items
+			]);
 		}
 
 		vscode.window.showInformationMessage('This should not happen, something wrong with ', inspect(element));
 		Promise.resolve([]);
-
 	}
 
 
 	/**
 	 * Given the path to package.json, read all its dependencies and devDependencies.
 	 */
-	private ParsePackageJson(packageJsonPath: string): DependencyTreeItem[] {
-		if (this.pathExists(packageJsonPath)) {
-			const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'));
+	private ParsePackageJson(packageJsonPath: string, parents: ReadonlyArray<string> = []): Promise<{pkg: PackageJson, items: DependencyTreeItem[]}> {
+		return fs.readJson(packageJsonPath)
+		.catch(() => ({pkg: {}, items: []}))
+		.then((pkg: PackageJson) => {
+			const pkgFolderPath = path.dirname(packageJsonPath);
+			if (parents.indexOf(pkgFolderPath) >= 0) return {pkg, items: []};
 
+			const childParents = parents.concat(pkgFolderPath)
 			const toDep = (moduleName: string, version: string): Dependency => {
-				const folderPath = path.join(this.workspaceRoot, 'node_modules', moduleName)
-				if (this.pathExists(folderPath)) {
-					return new Dependency(moduleName, version, vscode.TreeItemCollapsibleState.Collapsed);
+				const folderPath = findUp.sync(`node_modules/${moduleName}`, {cwd: this.workspaceRoot, type: 'directory'})
+				if (folderPath && !(parents.indexOf(folderPath) >= 0)) {
+					return new Dependency(moduleName, version, vscode.TreeItemCollapsibleState.Collapsed, undefined, folderPath, childParents);
 				} else {
 					return new Dependency(moduleName, version, vscode.TreeItemCollapsibleState.None);
 				}
 			}
 
-			const dep = packageJson.dependencies ?
-				Object.keys(packageJson.dependencies).map(dep => toDep(dep, packageJson.dependencies[dep])) : [new Seperator('--- No Dependencies ---')];
-			const devdep = packageJson.devDependencies ? [new Seperator('--- Dev Dependencies ---')].concat(Object.keys(packageJson.devDependencies).map(dep => toDep(dep, packageJson.devDependencies[dep]))) : [new Seperator('--- No Dev Dependencies ---')];
-			return [].concat(dep).concat(devdep);
-		} else {
-			return [];
-		}
+			const dep = pkg.dependencies ?
+				Object.keys(pkg.dependencies).map(dep => toDep(dep, pkg.dependencies[dep])) : [new Seperator('--- No Dependencies ---')];
+			const devdep = pkg.devDependencies ? [
+				new Seperator('--- Dev Dependencies ---')
+			].concat(
+				Object.keys(pkg.devDependencies)
+				.map(dep => toDep(dep, pkg.devDependencies[dep]))
+			) : [new Seperator('--- No Dev Dependencies ---')];
+			return {pkg, items: [].concat(dep).concat(devdep)};
+		})
 	}
 
 
@@ -135,6 +161,7 @@ class DependencyTreeItem extends vscode.TreeItem {
 	constructor(
 		public readonly label: string, 
 		public readonly collapsibleState: vscode.TreeItemCollapsibleState,
+		public readonly folderPath?: string
 	) {
 		super(label, collapsibleState);
 	}
@@ -160,12 +187,13 @@ class PackageTreeFolder extends DependencyTreeItem {
 	constructor(
 		public readonly folderPath: string,
 		public readonly label: string,
+		public readonly workspaceRoot?: string
 	) {
 		super(label, vscode.TreeItemCollapsibleState.Collapsed);
 	}
 
 	get tooltip(): string {
-		return `${this.folderPath}`
+		return this.workspaceRoot ? path.relative(this.workspaceRoot, this.folderPath) : this.folderPath
 	}
 
 	iconPath = {
@@ -182,6 +210,7 @@ class PackageTreeFile extends vscode.TreeItem {
 
 	constructor(
 		public readonly resourceUri: vscode.Uri,
+		public readonly label: string
 	) {
 		super(resourceUri);
 		this.command = {
@@ -199,13 +228,15 @@ class Dependency extends DependencyTreeItem {
 		public readonly label: string,
 		public readonly version: string,
 		public readonly collapsibleState: vscode.TreeItemCollapsibleState,
-		public readonly command ? : vscode.Command
+		public readonly command ? : vscode.Command,
+		public readonly folderPath?: string,
+		public readonly parents: ReadonlyArray<string> = []
 	) {
-		super(label, collapsibleState);
+		super(label, collapsibleState, folderPath);
 	}
 
 	get tooltip(): string {
-		return `${this.label}-${this.version}`
+		return `${this.label}@${this.version}`
 	}
 
 

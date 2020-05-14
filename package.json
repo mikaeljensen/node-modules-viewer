@@ -33,10 +33,6 @@
         },
         "commands": [
             {
-                "command": "node-modules-viewer.addEntry",
-                "title": "Add"
-            },
-            {
                 "command": "node-modules-viewer.refreshEntry",
                 "title": "Refresh",
                 "icon": {
@@ -45,16 +41,23 @@
                 }
             },
             {
-                "command": "node-modules-viewer.deleteEntry",
-                "title": "Delete"
+                "command": "node-modules-viewer.openFileInEditor",
+                "title": "Open in Editor"
             },
             {
                 "command": "node-modules-viewer.openPackageOnNpm",
-                "title": "Open on npmjs.org"
+                "title": "Open on registry webpage (i.e. npmjs.com)"
             }
         ],
         "menus": {
             "commandPalette": [],
+            "view/title": [
+                {
+                    "command": "node-modules-viewer.refreshEntry",
+                    "when": "view == node-modules-viewer",
+                    "group": "navigation"
+                }
+            ],
             "view/item/context": [
                 {
                     "command": "node-modules-viewer.openFileInEditor",
@@ -64,7 +67,7 @@
                 {
                     "command": "node-modules-viewer.openPackageOnNpm",
                     "when": "view == node-modules-viewer && viewItem == dependency",
-                    "title": "Open on npmjs.org"
+                    "title": "Open on registry webpage (i.e. npmjs.com)"
                 }
             ]
         },
@@ -88,9 +91,15 @@
         "postinstall": "node ./node_modules/vscode/bin/install"
     },
     "devDependencies": {
+        "@npm/types": "github:forivall/npm-types#forivall/fix-typo",
+        "@types/fs-extra": "^8.0.0",
+        "@types/node": "*",
         "typescript": "^2.1.4",
-        "vscode": "^1.0.0",
-        "@types/node": "*"
+        "vscode": "^1.0.0"
     },
-    "dependencies": {}
+    "dependencies": {
+        "@lerna/npm-conf": "^3.16.0",
+        "find-up": "^4.1.0",
+        "fs-extra": "^8.1.0"
+    }
 }
